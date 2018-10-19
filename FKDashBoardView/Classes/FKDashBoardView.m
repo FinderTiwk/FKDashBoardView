@@ -22,10 +22,12 @@
 
 //===================进度条===================
 @property (nonatomic,weak) CAShapeLayer *progressLayer;
+@property (nonatomic,assign) BOOL showCursorView; /**< 是否显示光标*/
 @property (nonatomic,weak) UIView *cursorView;    /**< 光标*/
 @property (nonatomic,assign) CGFloat currentProgress;    /**< 当前进度*/
 @property (nonatomic,assign) CGFloat progressBarWidth;   /**< 宽度*/
 @property (nonatomic,strong) UIColor *progressBarColor;  /**< 颜色*/
+@property (nonatomic,strong) UIColor *progressBarBackColor;
 
 //===================仪表盘===================
 @property (nonatomic,assign) CGFloat dashBoardWidth;   /**< 仪表盘宽度*/
@@ -73,15 +75,17 @@
     _subtitleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
     
     //整体配置
-    _startAngle = self.startAngle > 0? self.startAngle:160;
-    _endAngle   = self.endAngle > 0? self.endAngle:280;
-    _padding = 2;
-    _margin  = 2;
+    _startAngle = self.startAngle > 0? self.startAngle:150;
+    _endAngle   = self.endAngle > 0? self.endAngle:390;
+    _padding = 5;
+    _margin  = 10;
     
     //进度条配置
+    _showCursorView = YES;
     _currentProgress = 0;
     _progressBarWidth = 3;
     _progressBarColor = [UIColor whiteColor];
+    _progressBarBackColor = [[UIColor blackColor] colorWithAlphaComponent:0.6];
     
     //仪表盘默认配置
     _dashBoardWidth = 15;
@@ -117,7 +121,7 @@
                                                  clockwise:YES].CGPath;
         
         layer.fillColor = [UIColor clearColor].CGColor;
-        layer.strokeColor = [UIColor colorWithWhite:1 alpha:0.6].CGColor;
+        layer.strokeColor = self.progressBarBackColor.CGColor;
         layer.lineWidth = self.progressBarWidth;
         layer.lineCap = kCALineCapRound;
         [self.layer addSublayer:layer];
@@ -132,7 +136,7 @@
                                                  clockwise:YES].CGPath;
         
         layer.fillColor   = [UIColor clearColor].CGColor;
-        layer.strokeColor = [UIColor whiteColor].CGColor;
+        layer.strokeColor = self.progressBarColor.CGColor;
         layer.lineWidth   = self.progressBarWidth;
         layer.lineCap     = kCALineCapRound;
         layer.strokeEnd   = self.currentProgress;
@@ -140,7 +144,8 @@
         _progressLayer = layer;
     }
     
-    {//=========================光标=====================
+    if(self.showCursorView){
+        //=========================光标=====================
         CGFloat deltaAngle = self.startAngle + (self.endAngle - self.startAngle)*self.currentProgress;
         
         CGFloat centerX = centerPoint.x + radius*cosf(ANGLE2RADIAN(deltaAngle));
@@ -173,19 +178,23 @@
     }
     
     {//=========================仪表盘 刻度=====================
-        NSUInteger scaleCount = self.numberOfSmallScale * self.numberOfBigScale;
-        CGFloat perAngle      = (self.endAngle - self.startAngle)/scaleCount;
-        CGFloat perimeter     = (2*M_PI*radius); //周长
+        NSUInteger scaleCount = self.numberOfSmallScale * (self.numberOfBigScale - 1) + self.numberOfBigScale;
+        CGFloat perAngle = (self.endAngle - self.startAngle)/(scaleCount - 1);
+        CGFloat perimeter = (2*M_PI*radius); //周长
         
         //计算每一个刻度旋转的角度
-        for (NSUInteger index = 0 ; index < (scaleCount + 1); index ++) {
-            
-            BOOL isBigScale   = (index % (self.numberOfSmallScale + 1) == 0);
+        for (NSUInteger index = 1,j = 0; index <= scaleCount; index ++) {
+            if (j <= self.numberOfSmallScale) {
+                j++;
+            }else{
+                j = 1;
+            }
+            BOOL isBigScale = (j == 1);
             
             CGFloat lineWidth = isBigScale?self.dashBoardWidth:self.dashBoardWidth*0.8;
             CGFloat scaleLineWidth = isBigScale?2:1;
             
-            CGFloat start = self.startAngle + (perAngle*index);
+            CGFloat start = self.startAngle + (perAngle*(index - 1));
             CGFloat end   = start + (scaleLineWidth/perimeter*360);
 
             CAShapeLayer *layer = [CAShapeLayer layer];

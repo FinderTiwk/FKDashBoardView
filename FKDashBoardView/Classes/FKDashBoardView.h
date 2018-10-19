@@ -32,15 +32,18 @@
 @end
 
 
-
 #pragma mark - 进度条
 @interface FKDashBoardView()
+//是否显示光标,default YES
+- (void)setShowCursorView:(BOOL)show;
 //设置进度
 - (void)setProgress:(CGFloat)progress;
 //设置进度条宽度
 - (void)setProgressBarWidth:(CGFloat)width;
 //设置进度条颜色
 - (void)setProgressBarColor:(UIColor *)color;
+//设置进度条未到达部分颜色
+- (void)setProgressBarBackColor:(UIColor *)color;
 
 @end
 
